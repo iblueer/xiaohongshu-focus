@@ -63,7 +63,8 @@ const STYLE_IDS = {
   searchSuggest: 'xhs-blocker-search-suggest-style',
   notificationBadge: 'xhs-blocker-notification-badge-style',
   notificationEntry: 'xhs-blocker-notification-entry-style',
-  images: 'xhs-blocker-image-style'
+  images: 'xhs-blocker-image-style',
+  homeFocus: 'xhs-blocker-home-focus-style'
 };
 
 // ========== 全局状态 / Global State ==========
@@ -219,6 +220,372 @@ function handleImageVisibility() {
 }
 
 
+/**
+ * 6. 首页专注搜索布局 / Homepage Focus Search Layout
+ */
+function handleHomeFocusLayout() {
+  const shouldActive = currentSettings.hideFeed && shouldHideFeed();
+
+  // 注入/移出自定义CSS / Inject/remove custom CSS
+  const css = `
+    /* 首页专注模式自定义样式 / Homepage focus mode custom style */
+    .xhs-focus-centered-search-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 620px;
+      margin: 18vh auto 0 auto;
+      padding: 0 24px;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      animation: xhs-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+    }
+
+    @keyframes xhs-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(15px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .xhs-focus-logo-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      user-select: none;
+    }
+
+    .xhs-focus-logo-text {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      background: linear-gradient(135deg, #ff2442 0%, #ff527b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      filter: drop-shadow(0 2px 6px rgba(255, 36, 66, 0.12));
+    }
+
+    .xhs-focus-logo-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: #ff2442;
+      background: rgba(255, 36, 66, 0.08);
+      padding: 2px 8px;
+      border-radius: 12px;
+      margin-left: 10px;
+      border: 1px solid rgba(255, 36, 66, 0.15);
+      letter-spacing: 0.5px;
+      align-self: flex-start;
+      margin-top: 8px;
+    }
+
+    .xhs-focus-search-bar-container {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 36, 66, 0.12);
+      border-radius: 30px;
+      padding: 5px 5px 5px 18px;
+      box-sizing: border-box;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 2px 8px rgba(255, 36, 66, 0.02);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    .xhs-focus-search-bar-container:hover {
+      border-color: rgba(255, 36, 66, 0.3);
+      box-shadow: 0 12px 36px rgba(255, 36, 66, 0.06), 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .xhs-focus-search-bar-container:focus-within {
+      border-color: rgba(255, 36, 66, 0.6);
+      box-shadow: 0 15px 45px rgba(255, 36, 66, 0.12), 0 4px 16px rgba(255, 36, 66, 0.04);
+      transform: translateY(-2px);
+      background: #ffffff;
+    }
+
+    .xhs-focus-search-input-wrapper {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .xhs-focus-search-icon {
+      color: #8c8c8c;
+      margin-right: 12px;
+      flex-shrink: 0;
+      transition: color 0.3s;
+    }
+
+    .xhs-focus-search-bar-container:focus-within .xhs-focus-search-icon {
+      color: #ff2442;
+    }
+
+    .xhs-focus-custom-search-input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+      font-weight: 400;
+      color: #262626;
+      line-height: 24px;
+      padding: 8px 0;
+      caret-color: #ff2442;
+    }
+
+    .xhs-focus-custom-search-input::placeholder {
+      color: #bfbfbf;
+    }
+
+    .xhs-focus-clear-btn {
+      border: none;
+      background: transparent;
+      color: #bfbfbf;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px 8px;
+      margin-right: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .xhs-focus-clear-btn:hover {
+      color: #595959;
+      background: rgba(0, 0, 0, 0.05);
+    }
+
+    .xhs-focus-search-submit-btn {
+      background: linear-gradient(135deg, #ff2442 0%, #ff527b 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 24px;
+      padding: 9px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 36, 66, 0.25);
+      transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+      letter-spacing: 1px;
+      flex-shrink: 0;
+    }
+
+    .xhs-focus-search-submit-btn:hover {
+      box-shadow: 0 6px 18px rgba(255, 36, 66, 0.35);
+      filter: brightness(1.05);
+      transform: scale(1.02);
+    }
+
+    .xhs-focus-search-submit-btn:active {
+      transform: scale(0.97);
+    }
+
+    /* Dark Mode Styles */
+    @media (prefers-color-scheme: dark) {
+      .xhs-focus-search-bar-container {
+        background: rgba(38, 38, 38, 0.85);
+        border-color: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+      .xhs-focus-search-bar-container:hover {
+        border-color: rgba(255, 36, 66, 0.4);
+      }
+      .xhs-focus-search-bar-container:focus-within {
+        background: #262626;
+        border-color: rgba(255, 36, 66, 0.7);
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35), 0 4px 16px rgba(255, 36, 66, 0.15);
+      }
+      .xhs-focus-custom-search-input {
+        color: #f5f5f5;
+      }
+      .xhs-focus-custom-search-input::placeholder {
+        color: #595959;
+      }
+      .xhs-focus-search-icon {
+        color: #595959;
+      }
+    }
+  `;
+
+  manageStyle(STYLE_IDS.homeFocus, css, shouldActive);
+
+  // 辅助函数：控制原顶部搜索栏的显示与隐藏
+  function toggleOriginalHeader(show) {
+    const originalInput = document.getElementById('search-input');
+    if (!originalInput) return;
+
+    let current = originalInput.parentElement;
+    let searchContainer = null;
+    for (let i = 0; i < 4; i++) {
+      if (!current) break;
+      const className = current.className || '';
+      if (typeof className === 'string' && (className.includes('search') || className.includes('input-box'))) {
+        searchContainer = current;
+      }
+      current = current.parentElement;
+    }
+
+    const target = searchContainer || originalInput.parentElement;
+    if (target) {
+      if (show) {
+        target.style.removeProperty('display');
+      } else {
+        target.style.setProperty('display', 'none', 'important');
+      }
+    }
+  }
+
+  // 辅助函数：获取主面板容器
+  function getMainContainer() {
+    const feed = document.querySelector('.feeds-container') || 
+                 document.querySelector('.channel-container') ||
+                 document.querySelector('.explore-container');
+    if (feed && feed.parentElement) {
+      return feed.parentElement;
+    }
+    const mainContent = document.querySelector('.main-content') || 
+                        document.querySelector('#app') ||
+                        document.querySelector('#global');
+    return mainContent;
+  }
+
+  if (shouldActive) {
+    // 隐藏顶部原有搜索栏
+    toggleOriginalHeader(false);
+
+    // 检查并注入居中搜索栏
+    let panel = document.getElementById('xhs-focus-centered-search-panel');
+    const container = getMainContainer();
+
+    if (!panel && container) {
+      panel = document.createElement('div');
+      panel.id = 'xhs-focus-centered-search-panel';
+      panel.className = 'xhs-focus-centered-search-panel';
+      panel.innerHTML = `
+        <div class="xhs-focus-logo-container">
+          <span class="xhs-focus-logo-text">小红书</span>
+          <span class="xhs-focus-logo-badge">专注版</span>
+        </div>
+        <div class="xhs-focus-search-bar-container">
+          <div class="xhs-focus-search-input-wrapper">
+            <svg class="xhs-focus-search-icon" viewBox="0 0 24 24" width="18" height="18">
+              <path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+            </svg>
+            <input type="text" id="xhs-focus-custom-search-input" class="xhs-focus-custom-search-input" placeholder="搜索小红书" autocomplete="off">
+            <button id="xhs-focus-clear-btn" class="xhs-focus-clear-btn" style="display: none;">&times;</button>
+          </div>
+          <button id="xhs-focus-search-submit-btn" class="xhs-focus-search-submit-btn">搜索</button>
+        </div>
+      `;
+
+      container.appendChild(panel);
+
+      const customInput = panel.querySelector('#xhs-focus-custom-search-input');
+      const clearBtn = panel.querySelector('#xhs-focus-clear-btn');
+      const submitBtn = panel.querySelector('#xhs-focus-search-submit-btn');
+
+      // 执行搜索的共享函数
+      const runSearch = () => {
+        const query = customInput.value.trim();
+        if (!query) return;
+
+        const originalInput = document.getElementById('search-input');
+        if (originalInput) {
+          originalInput.value = query;
+          originalInput.dispatchEvent(new Event('input', { bubbles: true }));
+          originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+          const enterEvent = new KeyboardEvent('keydown', {
+            key: 'Enter',
+            code: 'Enter',
+            keyCode: 13,
+            which: 13,
+            bubbles: true,
+            cancelable: true
+          });
+          originalInput.dispatchEvent(enterEvent);
+        }
+
+        // 150ms 备用降级方案，防止 React 事件失效
+        setTimeout(() => {
+          if (!window.location.pathname.includes('/search_result')) {
+            window.location.href = `/search_result?keyword=${encodeURIComponent(query)}`;
+          }
+        }, 150);
+      };
+
+      // 绑定事件
+      customInput.addEventListener('input', () => {
+        clearBtn.style.display = customInput.value ? 'flex' : 'none';
+      });
+
+      customInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          runSearch();
+        }
+      });
+
+      clearBtn.addEventListener('click', () => {
+        customInput.value = '';
+        clearBtn.style.display = 'none';
+        customInput.focus();
+      });
+
+      submitBtn.addEventListener('click', runSearch);
+
+      // 自动聚焦
+      setTimeout(() => customInput.focus(), 50);
+    }
+  } else {
+    // 恢复顶部搜索栏并移除自定义面板
+    toggleOriginalHeader(true);
+    const panel = document.getElementById('xhs-focus-centered-search-panel');
+    if (panel) {
+      panel.remove();
+    }
+  }
+}
+
+// 全局键盘快捷键：按下 '/' 且未聚焦到输入框时，聚焦到自定义搜索框或原始搜索框
+function setupGlobalKeyboardShortcut() {
+  document.addEventListener('keydown', (e) => {
+    // 只有当用户没有聚焦在任何输入框或可编辑元素中时才触发
+    const activeEl = document.activeElement;
+    if (activeEl && (['INPUT', 'TEXTAREA'].includes(activeEl.tagName) || activeEl.isContentEditable)) {
+      return;
+    }
+
+    if (e.key === '/') {
+      const customInput = document.getElementById('xhs-focus-custom-search-input');
+      if (customInput) {
+        e.preventDefault();
+        customInput.focus();
+      } else {
+        const originalInput = document.getElementById('search-input');
+        if (originalInput && originalInput.offsetWidth > 0) { // 确保元素可见
+          e.preventDefault();
+          originalInput.focus();
+        }
+      }
+    }
+  });
+}
+
 // ========== 主控制函数 / Main Control Functions ==========
 
 /**
@@ -233,6 +600,7 @@ function applyAllSettings() {
   handleNotificationBadgeVisibility();
   handleNotificationEntryVisibility();
   handleImageVisibility();
+  handleHomeFocusLayout();
 }
 
 /**
@@ -329,6 +697,7 @@ async function initialize() {
   setupStorageListener();
   setupMessageListener();
   setupURLListeners();
+  setupGlobalKeyboardShortcut();
 
   // 根据页面加载状态应用设置 / Apply settings based on page load state
   if (document.readyState === 'loading') {
