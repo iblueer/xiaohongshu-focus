@@ -229,14 +229,23 @@ function handleHomeFocusLayout() {
   // 注入/移出自定义CSS / Inject/remove custom CSS
   const css = `
     /* 首页专注模式自定义样式 / Homepage focus mode custom style */
+    .xhs-focus-main-container {
+      position: relative !important;
+      height: 100vh !important;
+      overflow: hidden !important;
+    }
+
     .xhs-focus-centered-search-panel {
+      position: absolute;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       width: 100%;
       max-width: 620px;
-      margin: 18vh auto 0 auto;
       padding: 0 24px;
       box-sizing: border-box;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -247,11 +256,11 @@ function handleHomeFocusLayout() {
     @keyframes xhs-fade-in {
       from {
         opacity: 0;
-        transform: translateY(15px);
+        transform: translate(-50%, calc(-50% + 15px));
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translate(-50%, -50%);
       }
     }
 
@@ -472,84 +481,100 @@ function handleHomeFocusLayout() {
     let panel = document.getElementById('xhs-focus-centered-search-panel');
     const container = getMainContainer();
 
-    if (!panel && container) {
-      panel = document.createElement('div');
-      panel.id = 'xhs-focus-centered-search-panel';
-      panel.className = 'xhs-focus-centered-search-panel';
-      panel.innerHTML = `
-        <div class="xhs-focus-logo-container">
-          <span class="xhs-focus-logo-text">小红书</span>
-          <span class="xhs-focus-logo-badge">专注版</span>
-        </div>
-        <div class="xhs-focus-search-bar-container">
-          <div class="xhs-focus-search-input-wrapper">
-            <svg class="xhs-focus-search-icon" viewBox="0 0 24 24" width="18" height="18">
-              <path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-            </svg>
-            <input type="text" id="xhs-focus-custom-search-input" class="xhs-focus-custom-search-input" placeholder="搜索小红书" autocomplete="off">
-            <button id="xhs-focus-clear-btn" class="xhs-focus-clear-btn" style="display: none;">&times;</button>
+    if (container) {
+      // 移除旧容器的类名，避免样式残留
+      const oldContainers = document.querySelectorAll('.xhs-focus-main-container');
+      oldContainers.forEach(el => {
+        if (el !== container) {
+          el.classList.remove('xhs-focus-main-container');
+        }
+      });
+      container.classList.add('xhs-focus-main-container');
+    }
+
+    if (container) {
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'xhs-focus-centered-search-panel';
+        panel.className = 'xhs-focus-centered-search-panel';
+        panel.innerHTML = `
+          <div class="xhs-focus-logo-container">
+            <span class="xhs-focus-logo-text">小红书</span>
+            <span class="xhs-focus-logo-badge">专注版</span>
           </div>
-          <button id="xhs-focus-search-submit-btn" class="xhs-focus-search-submit-btn">搜索</button>
-        </div>
-      `;
+          <div class="xhs-focus-search-bar-container">
+            <div class="xhs-focus-search-input-wrapper">
+              <svg class="xhs-focus-search-icon" viewBox="0 0 24 24" width="18" height="18">
+                <path fill="currentColor" d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+              </svg>
+              <input type="text" id="xhs-focus-custom-search-input" class="xhs-focus-custom-search-input" placeholder="搜索小红书" autocomplete="off">
+              <button id="xhs-focus-clear-btn" class="xhs-focus-clear-btn" style="display: none;">&times;</button>
+            </div>
+            <button id="xhs-focus-search-submit-btn" class="xhs-focus-search-submit-btn">搜索</button>
+          </div>
+        `;
 
-      container.appendChild(panel);
+        container.appendChild(panel);
 
-      const customInput = panel.querySelector('#xhs-focus-custom-search-input');
-      const clearBtn = panel.querySelector('#xhs-focus-clear-btn');
-      const submitBtn = panel.querySelector('#xhs-focus-search-submit-btn');
+        const customInput = panel.querySelector('#xhs-focus-custom-search-input');
+        const clearBtn = panel.querySelector('#xhs-focus-clear-btn');
+        const submitBtn = panel.querySelector('#xhs-focus-search-submit-btn');
 
-      // 执行搜索的共享函数
-      const runSearch = () => {
-        const query = customInput.value.trim();
-        if (!query) return;
+        // 执行搜索的共享函数
+        const runSearch = () => {
+          const query = customInput.value.trim();
+          if (!query) return;
 
-        const originalInput = document.getElementById('search-input');
-        if (originalInput) {
-          originalInput.value = query;
-          originalInput.dispatchEvent(new Event('input', { bubbles: true }));
-          originalInput.dispatchEvent(new Event('change', { bubbles: true }));
+          const originalInput = document.getElementById('search-input');
+          if (originalInput) {
+            originalInput.value = query;
+            originalInput.dispatchEvent(new Event('input', { bubbles: true }));
+            originalInput.dispatchEvent(new Event('change', { bubbles: true }));
 
-          const enterEvent = new KeyboardEvent('keydown', {
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13,
-            bubbles: true,
-            cancelable: true
-          });
-          originalInput.dispatchEvent(enterEvent);
-        }
-
-        // 150ms 备用降级方案，防止 React 事件失效
-        setTimeout(() => {
-          if (!window.location.pathname.includes('/search_result')) {
-            window.location.href = `/search_result?keyword=${encodeURIComponent(query)}`;
+            const enterEvent = new KeyboardEvent('keydown', {
+              key: 'Enter',
+              code: 'Enter',
+              keyCode: 13,
+              which: 13,
+              bubbles: true,
+              cancelable: true
+            });
+            originalInput.dispatchEvent(enterEvent);
           }
-        }, 150);
-      };
 
-      // 绑定事件
-      customInput.addEventListener('input', () => {
-        clearBtn.style.display = customInput.value ? 'flex' : 'none';
-      });
+          // 150ms 备用降级方案，防止 React 事件失效
+          setTimeout(() => {
+            if (!window.location.pathname.includes('/search_result')) {
+              window.location.href = `/search_result?keyword=${encodeURIComponent(query)}`;
+            }
+          }, 150);
+        };
 
-      customInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          runSearch();
-        }
-      });
+        // 绑定事件
+        customInput.addEventListener('input', () => {
+          clearBtn.style.display = customInput.value ? 'flex' : 'none';
+        });
 
-      clearBtn.addEventListener('click', () => {
-        customInput.value = '';
-        clearBtn.style.display = 'none';
-        customInput.focus();
-      });
+        customInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            runSearch();
+          }
+        });
 
-      submitBtn.addEventListener('click', runSearch);
+        clearBtn.addEventListener('click', () => {
+          customInput.value = '';
+          clearBtn.style.display = 'none';
+          customInput.focus();
+        });
 
-      // 自动聚焦
-      setTimeout(() => customInput.focus(), 50);
+        submitBtn.addEventListener('click', runSearch);
+
+        // 自动聚焦
+        setTimeout(() => customInput.focus(), 50);
+      } else if (panel.parentElement !== container) {
+        // 如果容器发生变化，将搜索面板移动至新容器中
+        container.appendChild(panel);
+      }
     }
   } else {
     // 恢复顶部搜索栏并移除自定义面板
@@ -558,6 +583,12 @@ function handleHomeFocusLayout() {
     if (panel) {
       panel.remove();
     }
+    const container = getMainContainer();
+    if (container) {
+      container.classList.remove('xhs-focus-main-container');
+    }
+    const oldContainers = document.querySelectorAll('.xhs-focus-main-container');
+    oldContainers.forEach(el => el.classList.remove('xhs-focus-main-container'));
   }
 }
 
